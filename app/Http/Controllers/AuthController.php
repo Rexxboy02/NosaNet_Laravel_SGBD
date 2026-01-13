@@ -27,7 +27,7 @@ class AuthController extends Controller {
     $users[] = [
         'id' => uniqid(),
         'username' => $request->username,
-        'email' => $request->email, // <-- GUARDAMOS EL EMAIL
+        'email' => $request->email, 
         'password' => password_hash($request->password, PASSWORD_DEFAULT),
         'isProfessor' => $request->isProfessor ?? 'False',
         'theme' => 'light'

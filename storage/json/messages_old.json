@@ -1,0 +1,21 @@
+[
+    {
+        "id": "msg_001",
+        "user": "profesor",
+        "title": "Bienvenidos al curso",
+        "text": "Hola a todos, bienvenidos al nuevo semestre. Espero que aprendamos mucho juntos.",
+        "approved": "true",
+        "status": "active",
+        "timestamp": "09:00 11\/11\/2025"
+    },
+    {
+        "id": "msg_002",
+        "user": "alumno",
+        "title": "Duda sobre el proyecto",
+        "text": "Hola profesor, tengo una pregunta sobre los requisitos del proyecto final.",
+        "approved": "true",
+        "status": "active",
+        "timestamp": "09:15 11\/11\/2025"
+    }
+    
+]

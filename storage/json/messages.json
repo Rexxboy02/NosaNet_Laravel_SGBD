@@ -1,0 +1,73 @@
+[
+    
+    {
+        "id": "692590aab5dc9",
+        "user": "alumno",
+        "title": "puta",
+        "text": "&lt;script&gt;",
+        "asignatura": "Inglés",
+        "approved": "pending",
+        "status": "active",
+        "timestamp": "12:19 25\/11\/2025",
+        "dangerous_content": "attack"
+    },
+    {
+        "id": "6925934630d66",
+        "user": "profesor",
+        "title": "aaa",
+        "text": "aaa",
+        "asignatura": "Lengua",
+        "approved": "true",
+        "status": "active",
+        "timestamp": "12:30 25\/11\/2025",
+        "dangerous_content": "false"
+    },
+    {
+        "id": "6925935741824",
+        "user": "alumno",
+        "title": "aaa",
+        "text": "aaa",
+        "asignatura": "Inglés",
+        "approved": "pending",
+        "status": "active",
+        "timestamp": "12:30 25\/11\/2025",
+        "dangerous_content": "false"
+    },
+    {
+        "id": "6925935c8f415",
+        "user": "alumno",
+        "title": "aaa",
+        "text": "puta",
+        "asignatura": "Lengua",
+        "approved": "true",
+        "status": "active",
+        "timestamp": "12:30 25\/11\/2025",
+        "dangerous_content": "words",
+        "moderated_at": "12:43 25\/11\/2025",
+        "moderated_by": "profesor"
+    },
+    {
+        "id": "6925968c52070",
+        "user": "alumno",
+        "title": "hola",
+        "text": "maricón",
+        "asignatura": "Historia",
+        "approved": "pending",
+        "status": "active",
+        "timestamp": "12:44 25\/11\/2025",
+        "dangerous_content": "words"
+    },
+    {
+        "id": "692596ce8cbc7",
+        "user": "alumno",
+        "title": "hola",
+        "text": "drop table",
+        "asignatura": "Inglés",
+        "approved": "true",
+        "status": "active",
+        "timestamp": "12:45 25\/11\/2025",
+        "dangerous_content": "attack",
+        "moderated_at": "12:45 25\/11\/2025",
+        "moderated_by": "profesor"
+    }
+]
