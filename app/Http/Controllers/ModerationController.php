@@ -1,45 +1,54 @@
 <?php
+// app/Http\Controllers/ModerationController.php
 
 namespace App\Http\Controllers;
 
+use App\Models\Message;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
-class ModerationController extends Controller {
-    
-    public function index() {
-        // Solo entran los profesores
-        if (session('es_profesor') !== "True") {
-            return redirect()->route('home')->with('error', 'Acceso denegado');
-        }
-
-        $mensajes = json_decode(Storage::get('json/messages.json') ?? '[]', true);
-        
-        // Filtramos: pendientes o marcados como peligrosos por el filtro
-        $pendientes = array_filter($mensajes, function($m) {
-            return $m['approved'] === 'pending' || $m['dangerous_content'] === 'true';
-        });
-
-        return view('moderation', ['pendientes' => $pendientes]);
+class ModerationController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('professor');
     }
-
-    public function process(Request $request) {
-        $mensajes = json_decode(Storage::get('json/messages.json') ?? '[]', true);
-        $id = $request->message_id;
-        $accion = $request->action; // 'approve' o 'delete'
-
-        foreach ($mensajes as &$m) {
-            if ($m['id'] === $id) {
-                if ($accion === 'approve') {
-                    $m['approved'] = 'true';
-                    $m['dangerous_content'] = 'false'; // Al aprobarlo, quitamos la alerta
-                } else {
-                    $m['status'] = 'deleted';
-                }
-            }
-        }
-
-        Storage::put('json/messages.json', json_encode($mensajes, JSON_PRETTY_PRINT));
-        return back()->with('success', 'Acción realizada');
+    
+    public function index()
+    {
+        $pendingMessages = Message::getPending();
+        return view('moderation', compact('pendingMessages'));
+    }
+    
+    public function approve(Request $request)
+    {
+        $messageId = $request->message_id;
+        
+        Message::update($messageId, [
+            'approved' => 'true',
+            'moderated_at' => date('H:i d/m/Y'),
+            'moderated_by' => Session::get('username')
+        ]);
+        
+        return redirect()->route('moderation.index')
+            ->with('success', 'Mensaje aprobado correctamente');
+    }
+    
+    public function delete(Request $request)
+    {
+        $request->validate([
+            'message_id' => 'required',
+            'delete_reason' => 'required'
+        ]);
+        
+        Message::update($request->message_id, [
+            'status' => 'deleted',
+            'delete_reason' => htmlspecialchars($request->delete_reason),
+            'deleted_at' => date('H:i d/m/Y'),
+            'deleted_by' => Session::get('username')
+        ]);
+        
+        return redirect()->route('moderation.index')
+            ->with('success', 'Mensaje eliminado correctamente');
     }
 }

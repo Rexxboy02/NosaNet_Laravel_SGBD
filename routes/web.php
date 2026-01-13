@@ -2,20 +2,54 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ModerationController;
-
-// Página de inicio (Ver mensajes aprobados)
-Route::get('/', [MessageController::class, 'index'])->name('home');
+use App\Http\Controllers\ThemeController;
+use Illuminate\Support\Collection;
 
 // Autenticación
-Route::get('/login', function () { return view('auth.login'); })->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::get('/register', function () { return view('auth.register'); })->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
+Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Mensajes y Moderación
-Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
-Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation');
-Route::post('/moderation/action', [ModerationController::class, 'process'])->name('moderation.action');
+// Tema
+Route::post('/theme/toggle', [ThemeController::class, 'toggle'])->name('theme.toggle');
+
+// Mensajes
+Route::middleware(['auth.custom'])->group(function () {
+    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/messages/my-messages', [MessageController::class, 'myMessages'])->name('messages.my');
+});
+
+// Moderación
+Route::middleware(['auth.custom', 'professor'])->group(function () {
+    Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation.index');
+    Route::post('/moderation/approve', [ModerationController::class, 'approve'])->name('moderation.approve');
+    Route::post('/moderation/delete', [ModerationController::class, 'delete'])->name('moderation.delete');
+});
+
+// Página principal
+Route::get('/', function () {
+    // Cargar mensajes aprobados
+    $messages = \App\Models\Message::getApproved();
+    
+    // DEBUG: Ver qué tipo de dato es
+    // dd(gettype($messages), $messages);
+    
+    // Forzar que sea una colección si no lo es
+    if (!($messages instanceof Collection)) {
+        if (is_array($messages)) {
+            $messages = collect($messages);
+        } else {
+            $messages = collect([]);
+        }
+    }
+    
+    // Ordenar por timestamp descendente
+    $messages = $messages->sortByDesc('timestamp');
+    
+    return view('home', compact('messages'));
+})->name('home');
