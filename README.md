@@ -1,11 +1,11 @@
 NosaNet - Red Social Académica
-📋 Descripción del Proyecto
+Descripción del Proyecto
 NosaNet es una red social académica desarrollada con Laravel que permite a estudiantes y profesores compartir mensajes educativos. El sistema incluye funciones de moderación, sistema de temas claro/oscuro, y validación de contenido contra lenguaje ofensivo o ataques de seguridad.
 
-🎯 Justificación de Elección del Framework
+Justificación de Elección del Framework
 Se eligió Laravel como framework de desarrollo por varias razones fundamentales: su arquitectura MVC permite una clara separación de responsabilidades, su sistema de rutas y middleware facilita la implementación de control de acceso por roles, y su ecosistema robusto con Eloquent (aunque adaptado para JSON) proporciona una capa de abstracción para la persistencia de datos. Laravel ofrece una sintaxis elegante y expresiva que acelera el desarrollo, herramientas de seguridad integradas, y un sistema de sesiones y autenticación que, aunque personalizado para este proyecto, sigue los patrones de Laravel. Adicionalmente, su sistema de plantillas Blade permite una construcción modular de interfaces con herencia de layouts.
 
-🏗️ Patrones de Diseño Aplicados
+Patrones de Diseño Aplicados
 Patrón Repository
 Implementación: Las clases JsonModel, Message y User implementan este patrón. JsonModel actúa como un repositorio base abstracto que encapsula toda la lógica de acceso a datos JSON, proporcionando métodos CRUD estandarizados (all(), find(), create(), update(), delete()).
 
@@ -16,7 +16,7 @@ Implementación: Aunque no hay una clase Factory explícita, el patrón se aplic
 
 Justificación: Este enfoque permite encapsular la lógica de creación de entidades, asegurando que los objetos se creen en un estado válido y consistente. En MessageController::store(), por ejemplo, se determinan automáticamente campos como approved (basado en si el usuario es profesor), timestamp, y dangerous_content (mediante validación). Esto simplifica la creación de objetos complejos y garantiza la coherencia de datos.
 
-🚀 Instrucciones de Instalación y Arranque Local
+Instrucciones de Instalación y Arranque Local
 Requisitos Previos
 PHP >= 8.0
 
@@ -25,40 +25,48 @@ Composer
 Git
 
 Pasos de Instalación
+
 Clonar el repositorio:
 
 bash
-git clone https://github.com/tu-usuario/nosanet.git
+git clone https://github.com/99pablogz/NosaNet_Laravel
 cd nosanet
+
 Instalar dependencias de Composer:
 
 bash
 composer install
+
 Configurar permisos de directorios:
 
 bash
 chmod -R 755 storage
 chmod -R 755 bootstrap/cache
+
 Verificar estructura de directorios JSON:
 
 bash
 mkdir -p database/json
 touch database/json/messages.json
 touch database/json/users.json
+
 Inicializar archivos JSON:
 
 bash
 echo '[]' > database/json/messages.json
 echo '[]' > database/json/users.json
+
 Configurar variables de entorno (opcional):
 
 bash
 cp .env.example .env
 php artisan key:generate
+
 Iniciar el servidor de desarrollo:
 
 bash
 php artisan serve
+
 Acceder a la aplicación:
 
 Abrir navegador en: http://localhost:8000
