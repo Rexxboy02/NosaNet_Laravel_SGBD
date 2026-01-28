@@ -1,66 +1,204 @@
-# 🎓 NosaNet
-**Plataforma de comunicación académica moderada**
+NosaNet - Red Social Académica
+📋 Descripción del Proyecto
+NosaNet es una red social académica desarrollada con Laravel que permite a estudiantes y profesores compartir mensajes educativos. El sistema incluye funciones de moderación, sistema de temas claro/oscuro, y validación de contenido contra lenguaje ofensivo o ataques de seguridad.
 
-## 🧠 Descripción
+🎯 Justificación de Elección del Framework
+Se eligió Laravel como framework de desarrollo por varias razones fundamentales: su arquitectura MVC permite una clara separación de responsabilidades, su sistema de rutas y middleware facilita la implementación de control de acceso por roles, y su ecosistema robusto con Eloquent (aunque adaptado para JSON) proporciona una capa de abstracción para la persistencia de datos. Laravel ofrece una sintaxis elegante y expresiva que acelera el desarrollo, herramientas de seguridad integradas, y un sistema de sesiones y autenticación que, aunque personalizado para este proyecto, sigue los patrones de Laravel. Adicionalmente, su sistema de plantillas Blade permite una construcción modular de interfaces con herencia de layouts.
 
-**NosaNet** es una red social interna desarrollada como proyecto académico para la asignatura **Bases de Computación 5 (BC5)**. La aplicación permite a **alumnos y profesores** compartir mensajes educativos en un entorno controlado y seguro, con un sistema de moderación que garantiza la calidad y adecuación del contenido.
+🏗️ Patrones de Diseño Aplicados
+Patrón Repository
+Implementación: Las clases JsonModel, Message y User implementan este patrón. JsonModel actúa como un repositorio base abstracto que encapsula toda la lógica de acceso a datos JSON, proporcionando métodos CRUD estandarizados (all(), find(), create(), update(), delete()).
 
-El proyecto implementa una **arquitectura profesional** utilizando Laravel, aplicando **patrones de diseño modernos** y **principios de desarrollo de software** aprendidos durante el curso. La persistencia se maneja mediante archivos **JSON**, preparando el terreno para una futura migración a base de datos relacional en BC6.
+Justificación: Este patrón permite desacoplar la lógica de negocio de los detalles de persistencia. Si en el futuro se migrara a una base de datos relacional, solo sería necesario modificar las clases del repositorio sin afectar a los controladores. Además, centraliza las operaciones de lectura/escritura de JSON, promoviendo la reutilización de código y facilitando el mantenimiento.
 
-**Destinatarios principales:**
-- **Estudiantes** que necesitan compartir dudas y recursos
-- **Profesores** que desean publicar anuncios y moderar contenido
-- **Desarrolladores** que buscan aprender arquitectura MVC con Laravel
+Patrón Factory (implícito)
+Implementación: Aunque no hay una clase Factory explícita, el patrón se aplica implícitamente en los métodos create() de los modelos y en la creación de mensajes en MessageController::store(). Los controladores actúan como "fábricas" que ensamblan objetos complejos con datos validados.
 
-## 🚀 Funcionalidades Principales
+Justificación: Este enfoque permite encapsular la lógica de creación de entidades, asegurando que los objetos se creen en un estado válido y consistente. En MessageController::store(), por ejemplo, se determinan automáticamente campos como approved (basado en si el usuario es profesor), timestamp, y dangerous_content (mediante validación). Esto simplifica la creación de objetos complejos y garantiza la coherencia de datos.
 
-### 👥 Sistema de Usuarios
-- **Registro dual**: Alumnos y profesores con roles diferenciados
-- **Autenticación segura**: Hash bcrypt + rotación de ID de sesión
-- **Perfiles personalizados**: Tema claro/oscuro persistente
+🚀 Instrucciones de Instalación y Arranque Local
+Requisitos Previos
+PHP >= 8.0
 
-### 💬 Gestión de Mensajes
-- **Publicación controlada**: 1-280 caracteres con validación en tiempo real
-- **Asignaturas organizadas**: 9 categorías académicas predefinidas
-- **Estados de mensaje**: `pendiente` → `aprobado` → `eliminado`
+Composer
 
-### 🛡️ Sistema de Moderación
-- **Panel exclusivo**: Solo accesible para profesores
-- **Validación automática**: Detección de contenido peligroso (70+ patrones)
-- **Acciones manuales**: Aprobación/eliminación con justificación
+Git
 
-### 🎨 Experiencia de Usuario
-- **Tema dinámico**: Claro/oscuro con persistencia en cookies (30 días)
-- **Interfaz responsive**: Adaptada a móviles, tablets y desktop
-- **Feedback inmediato**: Alertas de éxito/error contextuales
+Pasos de Instalación
+Clonar el repositorio:
 
-### 🔒 Seguridad Avanzada
-- **Protección XSS**: Auto-escape en vistas + `htmlspecialchars()`
-- **Prevención SQLi**: Validación de patrones peligrosos
-- **Control de acceso**: Middleware por rol y autenticación
+bash
+git clone https://github.com/tu-usuario/nosanet.git
+cd nosanet
+Instalar dependencias de Composer:
 
-## 🛠️ Tecnologías Usadas
+bash
+composer install
+Configurar permisos de directorios:
 
-### Backend
-- **PHP 8.2+** - Lenguaje principal del servidor
-- **Laravel 12.46.0** - Framework MVC profesional
-- **Composer** - Gestor de dependencias PHP
+bash
+chmod -R 755 storage
+chmod -R 755 bootstrap/cache
+Verificar estructura de directorios JSON:
 
-### Frontend
-- **HTML5** - Estructura semántica
-- **CSS3** - Estilos personalizados con variables CSS
-- **Blade Templates** - Sistema de plantillas de Laravel
+bash
+mkdir -p database/json
+touch database/json/messages.json
+touch database/json/users.json
+Inicializar archivos JSON:
 
-### Arquitectura
-- **Repository Pattern** - Abstracción de persistencia JSON
-- **Active Record Pattern** - Modelos con comportamiento
-- **Middleware Pattern** - Filtros HTTP reutilizables
-- **MVC** - Separación clara de responsabilidades
+bash
+echo '[]' > database/json/messages.json
+echo '[]' > database/json/users.json
+Configurar variables de entorno (opcional):
 
-### Herramientas de Desarrollo
-- **XAMPP** - Entorno de desarrollo local
-- **VS Code** - Editor principal
-- **Git** - Control de versiones
+bash
+cp .env.example .env
+php artisan key:generate
+Iniciar el servidor de desarrollo:
 
+bash
+php artisan serve
+Acceder a la aplicación:
 
+Abrir navegador en: http://localhost:8000
 
+🛣️ Listado de Rutas y Roles Requeridos
+Rutas Públicas
+Método	Ruta	Controlador	Acción	Acceso
+GET	/	HomeController	index()	Público
+GET	/register	AuthController	showRegister()	Solo invitados
+POST	/register	AuthController	register()	Solo invitados
+GET	/login	LoginController	showLogin()	Solo invitados
+POST	/login	LoginController	login()	Solo invitados
+POST	/theme	ThemeController	toggle()	Todos
+Rutas Autenticadas (estudiantes y profesores)
+Método	Ruta	Controlador	Acción	Acceso
+POST	/logout	LoginController	logout()	Autenticados
+POST	/messages	MessageController	store()	Autenticados
+GET	/messages/my-messages	MessageController	myMessages()	Autenticados
+Rutas de Moderación (solo profesores)
+Método	Ruta	Controlador	Acción	Acceso
+GET	/moderation	ModerationController	index()	Profesores
+POST	/moderation/{id}/approve	ModerationController	approve()	Profesores
+POST	/moderation/{id}/delete	ModerationController	delete()	Profesores
+🔒 Explicación de Validación y Sanitización Implementada
+Validación de Formularios
+Registro: Valida formato de username (solo letras, números, _, -, .), email válido, contraseña mínima de 6 caracteres.
+
+Login: Valida campos requeridos y verifica credenciales con hash SHA256.
+
+Mensajes: Valida título (max 100 chars), texto (max 250 chars), asignatura requerida.
+
+Moderación: Requiere razón de aprobación/eliminación (3-500 caracteres).
+
+Sanitización de Entrada
+HTML Special Chars: Todos los campos de texto pasan por htmlspecialchars() con flags ENT_QUOTES | ENT_SUBSTITUTE para prevenir XSS.
+
+Validación de Contenido Peligroso:
+
+Palabras ofensivas: Sistema de regex para detectar más de 50 palabras ofensivas en español e inglés.
+
+Ataques de seguridad: Detecta patrones de SQL injection, XSS, path traversal, comandos del sistema.
+
+Hash de Contraseñas: Las contraseñas se hashean con SHA256 en cliente y se almacenan con Hash::make() de Laravel.
+
+Validación de Roles
+Middleware auth.custom: Verifica sesión activa.
+
+Middleware professor: Verifica que is_professor === 'True'.
+
+Middleware guest: Redirige usuarios autenticados.
+
+👥 Usuarios de Prueba
+Profesor (Rol de moderador)
+Username: profe_juan
+
+Email: juan@universidad.edu
+
+Contraseña: Profesor123
+
+Rol: True (profesor)
+
+Características: Puede aprobar/eliminar mensajes, acceso a panel de moderación, sus mensajes se aprueban automáticamente.
+
+Alumno (Rol estándar)
+Username: alumno_maria
+
+Email: maria@universidad.edu
+
+Contraseña: Estudiante123
+
+Rol: False (alumno)
+
+Características: Puede publicar mensajes (requieren moderación), ver sus mensajes aprobados/pendientes.
+
+Crear Usuarios de Prueba Manualmente
+Puedes registrar estos usuarios a través del formulario de registro en /register, o agregarlos directamente al archivo database/json/users.json:
+
+json
+[
+  {
+    "id": "profesor001",
+    "username": "profe_juan",
+    "email": "juan@universidad.edu",
+    "password": "$2y$10$...",
+    "isProfessor": "True",
+    "theme": "light",
+    "created_at": "2024-01-28 10:00:00"
+  },
+  {
+    "id": "alumno001",
+    "username": "alumno_maria",
+    "email": "maria@universidad.edu",
+    "password": "$2y$10$...",
+    "isProfessor": "False",
+    "theme": "light",
+    "created_at": "2024-01-28 10:00:00"
+  }
+]
+Nota: Las contraseñas deben generarse con Hash::make('password') en PHP o usando el formulario de registro.
+
+📁 Estructura del Proyecto
+text
+nosanet/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/     # Controladores MVC
+│   │   └── Middleware/      # Middleware personalizado
+│   ├── Models/              # Modelos (Message, User, JsonModel)
+│   ├── Helpers/             # Funciones helper
+│   └── Providers/           # Service Providers
+├── database/
+│   └── json/               # Almacenamiento JSON
+├── resources/
+│   └── views/              # Plantillas Blade
+├── routes/
+│   └── web.php             # Definición de rutas
+└── public/
+    └── css/                # Estilos CSS
+🛡️ Características de Seguridad
+CSRF Protection: Tokens en todos los formularios.
+
+XSS Prevention: Sanitización con htmlspecialchars().
+
+SQL Injection Prevention: Validación de patrones peligrosos.
+
+Session Security: Regeneración de IDs de sesión en login.
+
+Role-Based Access Control: Middleware para control de acceso.
+
+Input Validation: Validación en servidor y cliente.
+
+🎨 Características Adicionales
+Sistema de Temas: Toggle entre modo claro/oscuro con persistencia.
+
+Responsive Design: CSS moderno con variables CSS para temas.
+
+Validación de Contenido: Detección automática de contenido inapropiado.
+
+Feedback al Usuario: Mensajes de éxito/error con sesiones flash.
+
+Dropdown de Perfil: Interfaz de usuario mejorada.
+
+Desarrollado con Laravel y almacenamiento JSON para simplicidad y portabilid

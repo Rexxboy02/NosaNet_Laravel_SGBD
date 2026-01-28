@@ -56,7 +56,7 @@ class ModerationController extends Controller
             'approve_reason' => htmlspecialchars($request->approve_reason), // Cambiado aquí
             'moderated_at' => date('H:i d/m/Y'),
             'moderated_by' => Session::get('username'),
-            'status' => 'approved' // Asegúrate de actualizar el estado
+            'status' => 'active' // Asegúrate de actualizar el estado
         ]);
         
         if ($updated) {
