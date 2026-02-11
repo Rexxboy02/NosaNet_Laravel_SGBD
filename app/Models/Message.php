@@ -3,59 +3,66 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class Message extends JsonModel
+class Message extends Model
 {
-    protected static $filePath = 'messages.json';
-    
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'id',
+        'user',
+        'title',
+        'text',
+        'asignatura',
+        'approved',
+        'status',
+        'timestamp',
+        'dangerous_content',
+        'approve_reason',
+        'delete_reason',
+        'moderated_at',
+        'moderated_by',
+        'deleted_at',
+        'deleted_by'
+    ];
+
+    /**
+     * Obtener mensajes pendientes de aprobación
+     */
     public static function getPending(): Collection
     {
-        $data = parent::where('approved', 'pending')
-                      ->where('status', 'active');
-        
-        return collect($data);
+        return self::where('approved', 'pending')
+                   ->where('status', 'active')
+                   ->get();
     }
-    
-     public static function getApproved()
+
+    /**
+     * Obtener mensajes aprobados
+     */
+    public static function getApproved(): Collection
     {
-        $data = parent::where('approved', 'true')
-                      ->where('status', 'active');
-        
-        // DEBUG: Ver qué retorna
-        // dd('getApproved return type:', gettype($data), 'value:', $data);
-        
-        return $data;
+        return self::where('approved', 'true')
+                   ->where('status', 'active')
+                   ->get();
     }
-    
+
+    /**
+     * Obtener mensajes eliminados
+     */
     public static function getDeleted(): Collection
     {
-        $data = parent::where('status', 'deleted');
-        
-        return collect($data);
+        return self::where('status', 'deleted')->get();
     }
-    
+
+    /**
+     * Obtener mensajes de un usuario específico
+     */
     public static function getUserMessages($username): Collection
     {
-        $data = parent::where('user', $username);
-        
-        return collect($data);
-    }
-    
-    // Sobrescribir el método where para retornar colecciones
-    public static function where($key, $value): Collection
-    {
-        $data = static::readData();
-        $filteredData = array_filter($data, function($item) use ($key, $value) {
-            return isset($item[$key]) && $item[$key] == $value;
-        });
-        
-        return collect(array_values($filteredData));
-    }
-    
-    // Sobrescribir el método all para retornar colecciones
-    public static function all(): Collection
-    {
-        return collect(parent::all());
+        return self::where('user', $username)->get();
     }
 }

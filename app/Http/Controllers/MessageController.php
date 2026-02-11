@@ -60,38 +60,19 @@ class MessageController extends Controller
         
         // Obtener todos los mensajes del usuario
         $userMessages = Message::getUserMessages($username);
-        
-        // Inicializar arrays
-        $approvedMessages = [];
-        $pendingMessages = [];
-        $deletedMessages = [];
-        
-        // Filtrar mensajes
-        foreach ($userMessages as $message) {
-            if (($message['status'] ?? 'active') === 'deleted') {
-                $deletedMessages[] = $message;
-            } elseif (($message['approved'] ?? '') === 'true') {
-                $approvedMessages[] = $message;
-            } elseif (($message['approved'] ?? '') === 'pending') {
-                $pendingMessages[] = $message;
-            }
-        }
-        
-        // Ordenar por timestamp descendente
-        usort($approvedMessages, function($a, $b) {
-            return strtotime(str_replace('/', '-', $b['timestamp'])) - 
-                   strtotime(str_replace('/', '-', $a['timestamp']));
-        });
-        
-        usort($pendingMessages, function($a, $b) {
-            return strtotime(str_replace('/', '-', $b['timestamp'])) - 
-                   strtotime(str_replace('/', '-', $a['timestamp']));
-        });
-        
-        usort($deletedMessages, function($a, $b) {
-            return strtotime(str_replace('/', '-', $b['timestamp'])) - 
-                   strtotime(str_replace('/', '-', $a['timestamp']));
-        });
+
+        // Filtrar mensajes por categoría
+        $approvedMessages = $userMessages->filter(function($message) {
+            return $message->status === 'active' && $message->approved === 'true';
+        })->sortByDesc('timestamp')->values()->all();
+
+        $pendingMessages = $userMessages->filter(function($message) {
+            return $message->status === 'active' && $message->approved === 'pending';
+        })->sortByDesc('timestamp')->values()->all();
+
+        $deletedMessages = $userMessages->filter(function($message) {
+            return $message->status === 'deleted';
+        })->sortByDesc('timestamp')->values()->all();
         
         return view('messages.myMessages', [
             'approvedMessages' => $approvedMessages,

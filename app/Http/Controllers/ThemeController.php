@@ -31,10 +31,11 @@ class ThemeController extends Controller
         if (auth_check()) {
             $username = Session::get('username');
             $user = User::findByUsername($username);
-            
+
             if ($user) {
                 // Actualizar el tema del usuario en la base de datos
-                User::update($user['id'], ['theme' => $newTheme]);
+                $user->theme = $newTheme;
+                $user->save();
             }
         }
         

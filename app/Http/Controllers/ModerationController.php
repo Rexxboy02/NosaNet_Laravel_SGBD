@@ -14,24 +14,8 @@ class ModerationController extends Controller
                 ->with('error', 'No tienes permisos de moderación');
         }
         
-        $pendingMessages = Message::getPending();
-        
-        // Corregir esta parte
-        if (is_array($pendingMessages)) {
-            // Ya es un array
-        } elseif (method_exists($pendingMessages, 'all')) {
-            $pendingMessages = $pendingMessages->all();
-        } else {
-            $pendingMessages = [];
-        }
-        
-        // Ordenar por timestamp descendente
-        usort($pendingMessages, function($a, $b) {
-            $timeA = isset($a['timestamp']) ? strtotime(str_replace('/', '-', $a['timestamp'])) : 0;
-            $timeB = isset($b['timestamp']) ? strtotime(str_replace('/', '-', $b['timestamp'])) : 0;
-            return $timeB - $timeA;
-        });
-        
+        $pendingMessages = Message::getPending()->sortByDesc('timestamp');
+
         return view('moderation', compact('pendingMessages'));
     }
     
@@ -48,18 +32,19 @@ class ModerationController extends Controller
         }
         
         $request->validate([
-            'approve_reason' => 'required|min:3|max:500' // Cambiado a approve_reason
+            'approve_reason' => 'required|min:3|max:500'
         ]);
-        
-        $updated = Message::update($id, [
-            'approved' => 'true',
-            'approve_reason' => htmlspecialchars($request->approve_reason), // Cambiado aquí
-            'moderated_at' => date('H:i d/m/Y'),
-            'moderated_by' => Session::get('username'),
-            'status' => 'active' // Asegúrate de actualizar el estado
-        ]);
-        
-        if ($updated) {
+
+        $message = Message::find($id);
+
+        if ($message) {
+            $message->approved = 'true';
+            $message->approve_reason = htmlspecialchars($request->approve_reason);
+            $message->moderated_at = date('H:i d/m/Y');
+            $message->moderated_by = Session::get('username');
+            $message->status = 'active';
+            $message->save();
+
             return redirect()->route('moderation.index')
                 ->with('success', 'Mensaje aprobado correctamente');
         } else {
@@ -78,16 +63,17 @@ class ModerationController extends Controller
         $request->validate([
             'delete_reason' => 'required|min:3|max:500'
         ]);
-        
-        $updated = Message::update($id, [
-            'status' => 'deleted',
-            'delete_reason' => htmlspecialchars($request->delete_reason),
-            'deleted_at' => date('H:i d/m/Y'),
-            'deleted_by' => Session::get('username'),
-            'approved' => 'false' // Asegúrate de marcar como no aprobado
-        ]);
-        
-        if ($updated) {
+
+        $message = Message::find($id);
+
+        if ($message) {
+            $message->status = 'deleted';
+            $message->delete_reason = htmlspecialchars($request->delete_reason);
+            $message->deleted_at = date('H:i d/m/Y');
+            $message->deleted_by = Session::get('username');
+            $message->approved = 'false';
+            $message->save();
+
             return redirect()->route('moderation.index')
                 ->with('success', 'Mensaje eliminado correctamente');
         } else {

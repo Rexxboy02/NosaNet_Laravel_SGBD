@@ -210,3 +210,22 @@ Feedback al Usuario: Mensajes de éxito/error con sesiones flash.
 Dropdown de Perfil: Interfaz de usuario mejorada.
 
 Desarrollado con Laravel y almacenamiento JSON para simplicidad y portabilid
+
+# BBDD - NosaNet
+Se ha elegido como SGBD SQLite debido a su facilidad de uso y portabilidad. Esto permite que el proyecto se ejecute en 
+cualquier sistema operativo, que la configuración sea rápida y sencilla, y que no requiera instalación adicional de 
+servidores de bases de datos.
+
+Comandos para crear la BBDD:
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && php artisan make:migration create_users_table
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && php artisan make:migration create_messages_table
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && where php
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && C:\Users\bruno\.config\herd\bin\php.bat artisan make:migration create_users_table
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && C:\Users\bruno\.config\herd\bin\php.bat artisan make:migration create_messages_table
+cd "C:\Users\bruno\IdeaProjects\NosaNet_Laravel" && type nul > database\database.sqlite
+
+php artisan migrate
+
+Tras crear todas las migraciones se debe ejecutar el comando php artisan migrate para crear las tablas en la base de 
+datos en base a los contenidos de las migraciones.
+

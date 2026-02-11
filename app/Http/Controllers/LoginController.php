@@ -41,30 +41,30 @@ class LoginController extends Controller
         }
         
         // Verificar la contraseña usando Hash::check
-        if (!Hash::check($request->password, $user['password'])) {
+        if (!Hash::check($request->password, $user->password)) {
             return redirect()->back()
                 ->withErrors(['password' => 'Contraseña incorrecta'])
                 ->withInput();
         }
-        
+
         // Guardar datos en sesión
-        Session::put('user_id', $user['id']);
-        Session::put('username', $user['username']);
-        Session::put('email', $user['email']);
-        Session::put('is_professor', $user['isProfessor']);
-        
+        Session::put('user_id', $user->id);
+        Session::put('username', $user->username);
+        Session::put('email', $user->email);
+        Session::put('is_professor', $user->isProfessor);
+
         // Cargar tema del usuario desde la base de datos
-        $theme = $user['theme'] ?? 'light';
+        $theme = $user->theme ?? 'light';
         Session::put('theme', $theme);
-        
+
         // Crear cookie del tema que dura 30 días
         Cookie::queue('theme', $theme, 30 * 24 * 60);
-        
+
         // Regenerar ID de sesión por seguridad
         Session::regenerate();
-        
+
         return redirect()->route('home')
-            ->with('success', 'Bienvenido ' . $user['username'])
+            ->with('success', 'Bienvenido ' . $user->username)
             ->withCookie(cookie('theme', $theme, 30 * 24 * 60));
     }
     
