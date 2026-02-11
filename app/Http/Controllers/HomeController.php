@@ -1,27 +1,41 @@
 <?php
-// app/Http/Controllers/HomeController.php
 
 namespace App\Http\Controllers;
 
-use App\Models\Message;
-use Illuminate\Support\Collection;
+use App\Workers\MessageWorker;
 
+/**
+ * Controlador de la página principal
+ *
+ * Maneja la visualización de la página de inicio
+ */
 class HomeController extends Controller
 {
-    //index muestra la página de inicio con los mensajes aprobados ordenados por timestamp descendente
+    /**
+     * @var MessageWorker
+     */
+    protected MessageWorker $messageWorker;
+
+    /**
+     * Constructor del HomeController
+     *
+     * @param MessageWorker $messageWorker Worker de mensajes
+     */
+    public function __construct(MessageWorker $messageWorker)
+    {
+        $this->messageWorker = $messageWorker;
+    }
+
+    /**
+     * Mostrar la página de inicio con mensajes aprobados
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
-        // Asegurar que $messages sea una colección
-        $messages = Message::getApproved();
-        
-        // Si getApproved() retorna un array, conviértelo a colección
-        if (is_array($messages)) {
-            $messages = collect($messages);
-        }
-        
-        // Ordenar por timestamp descendente
-        $messages = $messages->sortByDesc('timestamp');
-        
+        // Delegar al worker la obtención de mensajes aprobados
+        $messages = $this->messageWorker->getApprovedMessages();
+
         return view('home', compact('messages'));
     }
 }

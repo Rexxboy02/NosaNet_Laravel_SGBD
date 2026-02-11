@@ -1,63 +1,80 @@
 <?php
-// app/Http/Controllers/LoginController.php
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Workers\AuthWorker;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cookie;
 
+/**
+ * Controlador de login
+ *
+ * Maneja las peticiones de inicio y cierre de sesión
+ */
 class LoginController extends Controller
 {
     /**
+     * @var AuthWorker
+     */
+    protected AuthWorker $authWorker;
+
+    /**
+     * Constructor del LoginController
+     *
+     * @param AuthWorker $authWorker Worker de autenticación
+     */
+    public function __construct(AuthWorker $authWorker)
+    {
+        $this->authWorker = $authWorker;
+    }
+
+    /**
      * Mostrar formulario de login
+     *
+     * @return \Illuminate\View\View
      */
     public function showLogin()
     {
         return view('auth.login');
     }
-    
+
     /**
-     * Manejar el proceso de login
+     * Procesar el inicio de sesión
+     *
+     * @param Request $request Petición HTTP con credenciales
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function login(Request $request)
     {
-        // Validar los datos de entrada
+        // Validar datos de entrada
         $request->validate([
             'username' => 'required',
             'password' => 'required'
         ]);
-        
-        // Buscar el usuario por nombre de usuario
-        $user = User::findByUsername($request->username);
-        
-        // Si no se encuentra el usuario, redirigir de vuelta con error
-        if (!$user) {
+
+        // Delegar autenticación al worker
+        $result = $this->authWorker->authenticate($request->username, $request->password);
+
+        if (!$result['success']) {
+            $errorKey = $result['error'] === 'Usuario no encontrado' ? 'username' : 'password';
             return redirect()->back()
-                ->withErrors(['username' => 'Usuario no encontrado'])
-                ->withInput();
-        }
-        
-        // Verificar la contraseña usando Hash::check
-        if (!Hash::check($request->password, $user->password)) {
-            return redirect()->back()
-                ->withErrors(['password' => 'Contraseña incorrecta'])
+                ->withErrors([$errorKey => $result['error']])
                 ->withInput();
         }
 
-        // Guardar datos en sesión
+        $user = $result['user'];
+
+        // Configurar sesión
         Session::put('user_id', $user->id);
         Session::put('username', $user->username);
         Session::put('email', $user->email);
         Session::put('is_professor', $user->isProfessor);
 
-        // Cargar tema del usuario desde la base de datos
         $theme = $user->theme ?? 'light';
         Session::put('theme', $theme);
 
-        // Crear cookie del tema que dura 30 días
+        // Configurar cookie de tema
         Cookie::queue('theme', $theme, 30 * 24 * 60);
 
         // Regenerar ID de sesión por seguridad
@@ -67,24 +84,21 @@ class LoginController extends Controller
             ->with('success', 'Bienvenido ' . $user->username)
             ->withCookie(cookie('theme', $theme, 30 * 24 * 60));
     }
-    
+
     /**
-     * Manejar logout
+     * Cerrar sesión
+     *
+     * @param Request $request Petición HTTP
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function logout(Request $request)
     {
-        // Limpiar toda la sesión
         Session::flush();
-        
-        // Invalidar la sesión
         Session::invalidate();
-        
-        // Regenerar token CSRF
         $request->session()->regenerateToken();
-        
-        // Crear cookie de tema vacía que expira en el pasado
+
         $cookie = Cookie::forget('theme');
-        
+
         return redirect()->route('home')
             ->with('success', 'Sesión cerrada correctamente')
             ->withCookie($cookie);

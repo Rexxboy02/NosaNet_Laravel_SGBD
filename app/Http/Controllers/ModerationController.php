@@ -1,84 +1,120 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Message;
+use App\Workers\ModerationWorker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
+/**
+ * Controlador de moderación
+ *
+ * Maneja las peticiones de moderación de mensajes
+ */
 class ModerationController extends Controller
 {
+    /**
+     * @var ModerationWorker
+     */
+    protected ModerationWorker $moderationWorker;
+
+    /**
+     * Constructor del ModerationController
+     *
+     * @param ModerationWorker $moderationWorker Worker de moderación
+     */
+    public function __construct(ModerationWorker $moderationWorker)
+    {
+        $this->moderationWorker = $moderationWorker;
+    }
+
+    /**
+     * Mostrar panel de moderación con mensajes pendientes
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function index()
     {
-        if (!Session::has('is_professor') || Session::get('is_professor') !== 'True') {
+        if (!$this->moderationWorker->isModerator(Session::get('is_professor'))) {
             return redirect()->route('home')
                 ->with('error', 'No tienes permisos de moderación');
         }
-        
-        $pendingMessages = Message::getPending()->sortByDesc('timestamp');
+
+        $pendingMessages = $this->moderationWorker->getPendingMessages();
 
         return view('moderation', compact('pendingMessages'));
     }
-    
+
+    /**
+     * Aprobar un mensaje
+     *
+     * @param string $id ID del mensaje
+     * @param Request $request Petición HTTP con la razón de aprobación
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function approve($id, Request $request)
     {
-        if (!Session::has('is_professor') || Session::get('is_professor') !== 'True') {
+        if (!$this->moderationWorker->isModerator(Session::get('is_professor'))) {
             return redirect()->route('home')
                 ->with('error', 'No tienes permisos de moderación');
         }
-        
+
         if (!$id) {
             return redirect()->route('moderation.index')
                 ->with('error', 'ID de mensaje no proporcionado');
         }
-        
+
         $request->validate([
             'approve_reason' => 'required|min:3|max:500'
         ]);
 
-        $message = Message::find($id);
+        // Delegar al worker la aprobación del mensaje
+        $result = $this->moderationWorker->approveMessage(
+            $id,
+            $request->approve_reason,
+            Session::get('username')
+        );
 
-        if ($message) {
-            $message->approved = 'true';
-            $message->approve_reason = htmlspecialchars($request->approve_reason);
-            $message->moderated_at = date('H:i d/m/Y');
-            $message->moderated_by = Session::get('username');
-            $message->status = 'active';
-            $message->save();
-
+        if ($result['success']) {
             return redirect()->route('moderation.index')
                 ->with('success', 'Mensaje aprobado correctamente');
         } else {
             return redirect()->route('moderation.index')
-                ->with('error', 'No se pudo encontrar el mensaje');
+                ->with('error', $result['error']);
         }
     }
-    
+
+    /**
+     * Eliminar un mensaje
+     *
+     * @param string $id ID del mensaje
+     * @param Request $request Petición HTTP con la razón de eliminación
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function delete($id, Request $request)
     {
-        if (!Session::has('is_professor') || Session::get('is_professor') !== 'True') {
+        if (!$this->moderationWorker->isModerator(Session::get('is_professor'))) {
             return redirect()->route('home')
                 ->with('error', 'No tienes permisos de moderación');
         }
-        
+
         $request->validate([
             'delete_reason' => 'required|min:3|max:500'
         ]);
 
-        $message = Message::find($id);
+        // Delegar al worker la eliminación del mensaje
+        $result = $this->moderationWorker->deleteMessage(
+            $id,
+            $request->delete_reason,
+            Session::get('username')
+        );
 
-        if ($message) {
-            $message->status = 'deleted';
-            $message->delete_reason = htmlspecialchars($request->delete_reason);
-            $message->deleted_at = date('H:i d/m/Y');
-            $message->deleted_by = Session::get('username');
-            $message->approved = 'false';
-            $message->save();
-
+        if ($result['success']) {
             return redirect()->route('moderation.index')
                 ->with('success', 'Mensaje eliminado correctamente');
         } else {
             return redirect()->route('moderation.index')
-                ->with('error', 'No se pudo encontrar el mensaje');
+                ->with('error', $result['error']);
         }
     }
 }
